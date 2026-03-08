@@ -108,17 +108,28 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
     if is_test:
         from datetime import timedelta
         logger.info("使用模拟数据测试webhook")
-        mock_article = {
-            "id": "test-article-001",
-            "mp_id": hook.feed.id if hook.feed else "test-mp-id",
-            "title": "测试文章标题",
-            "pic_url": "https://via.placeholder.com/300x200",
-            "url": "https://example.com/test-article",
-            "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。",
-            "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-            "content": "<p>这是测试文章的正文内容。</p>"
-        }
-        processed_articles = [mock_article]
+        processed_articles = [
+            {
+                "id": "test-article-001",
+                "mp_id": hook.feed.id if hook.feed else "test-mp-id",
+                "title": "测试文章标题",
+                "pic_url": "https://via.placeholder.com/300x200",
+                "url": "https://example.com/test-article",
+                "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。",
+                "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                "content": "<p>这是测试文章的正文内容。</p>"
+            },
+            {
+                "id": "test-article-002",
+                "mp_id": hook.feed.id if hook.feed else "test-mp-id2",
+                "title": "测试文章标题2",
+                "pic_url": "https://via.placeholder.com/300x200",
+                "url": "https://example.com/test-article",
+                "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。2",
+                "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                "content": "<p>这是测试文章的正文内容。2</p>"
+            }
+        ]  # 模拟多条文章
     else:
         processed_articles = []
         for article in hook.articles:
@@ -192,14 +203,40 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
 
     # print_success(f"发送webhook请求{payload}")
     try:
-        response = requests.post(
-            hook.task.web_hook_url,
-            data=payload,
-            headers=headers,
-            cookies=cookies
-        )
-        response.raise_for_status()
-        return "Webhook调用成功"
+        # 检查 payload 是否包含 articles 数组
+        payload_data = json.loads(payload)
+        if isinstance(payload_data, dict) and "articles" in payload_data:
+            articles = payload_data["articles"]
+            other_data = {k: v for k, v in payload_data.items() if k != "articles"}  # 提取除 articles 外的其他字段
+            errors = []  # 用于记录所有失败的错误信息
+
+            for article in articles:
+                article_data = {
+                    **article,
+                    **other_data
+                }
+                try:
+                    # 输出发送的消息
+                    logger.info(f"发送消息: {article_data}")
+                    response = requests.post(
+                        hook.task.web_hook_url,
+                        headers=headers,
+                        data=json.dumps(article_data),
+                        cookies=cookies
+                    )
+                    response.raise_for_status()
+                    print(f"发送成功: {response.text}")
+                except Exception as e:
+                    error_message = f"文章发送失败: {article}, 错误: {str(e)}"
+                    errors.append(error_message)
+
+            # 汇总错误信息
+            if errors:
+                print("以下文章发送失败:")
+                for error in errors:
+                    print(error)
+        else:
+            logger.error("payload 中未包含 articles 数组")
     except Exception as e:
         raise ValueError(f"Webhook调用失败: {str(e)}")
 
