@@ -114,7 +114,7 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                 "mp_id": hook.feed.id if hook.feed else "test-mp-id",
                 "title": "测试文章标题",
                 "pic_url": "https://via.placeholder.com/300x200",
-                "url": "https://example.com/test-article",
+                "url": "https://mp.weixin.qq.com/s/qRZ0jTkvpDi_hPHZV1SmWw",
                 "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。",
                 "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
                 "content": "<p>这是测试文章的正文内容。</p>"
@@ -124,7 +124,7 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                 "mp_id": hook.feed.id if hook.feed else "test-mp-id2",
                 "title": "测试文章标题2",
                 "pic_url": "https://via.placeholder.com/300x200",
-                "url": "https://example.com/test-article",
+                "url": "https://mp.weixin.qq.com/s/YGOYMinEDOfoha9SroMtmg",
                 "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。2",
                 "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
                 "content": "<p>这是测试文章的正文内容。2</p>"
@@ -216,6 +216,15 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                     **other_data
                 }
                 try:
+                    # 暂存数据
+                    data = article_data
+                    # 如果是coze工作流，需要拼接成{"workflow_id": "",  "parameters": {}}的格式
+                    if "workflow_id" in payload_data:
+                        article_data = {
+                            "workflow_id": payload_data["workflow_id"],
+                            "parameters": data
+                        }
+                    
                     # 输出发送的消息
                     logger.info(f"发送消息: {article_data}")
                     response = requests.post(
