@@ -117,7 +117,8 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                 "url": "https://mp.weixin.qq.com/s/qRZ0jTkvpDi_hPHZV1SmWw",
                 "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。",
                 "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                "content": "<p>这是测试文章的正文内容。</p>"
+                "content": "<p>这是测试文章的正文内容。</p>",
+                "error": '模拟错误信息: 无法访问文章链接'
             },
             {
                 "id": "test-article-002",
@@ -127,7 +128,8 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                 "url": "https://mp.weixin.qq.com/s/YGOYMinEDOfoha9SroMtmg",
                 "description": "这是一篇测试文章的描述内容，用于测试webhook功能是否正常。2",
                 "publish_time": (datetime.now() - timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
-                "content": "<p>这是测试文章的正文内容。2</p>"
+                "content": "<p>这是测试文章的正文内容。2</p>",
+                "error": '模拟错误信息: 工作流额度已满，无法执行工作流'
             }
         ]  # 模拟多条文章
     else:
@@ -236,28 +238,24 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                     response.raise_for_status()
                     print(f"发送成功: {response.text}")
                 except Exception as e:
-                    error_message = f"文章发送失败: {article.title}, 错误: {str(e)}"
+                    error_message = {
+                        **article_data,
+                        "error": str(e)
+                    }
                     errors.append(error_message)
-
             # 汇总错误信息
             if errors:
                 print("以下文章发送失败:")
                 for error in errors:
                     print(error)
-                # 如果有错误且err_web_hook_url不为空，发送错误信息到err_web_hook_url
-                if hook.task.err_web_hook_url:
-                    webhook_msg = {    
-                        "msg_type": "text",
-                        "content": {
-                            "text": "\n".join(errors)
-                        }
-                    }
-                    requests.post(
-                        hook.task.err_web_hook_url,
-                        headers={"Content-Type": "application/json"},
-                        data=json.dumps(webhook_msg),
-                        cookies=None
-                    )
+                    # 如果有错误且err_web_hook_url不为空，发送错误信息到err_web_hook_url
+                    if hook.task.err_web_hook_url:
+                        requests.post(
+                            hook.task.err_web_hook_url,
+                            headers={"Content-Type": "application/json"},
+                            data=json.dumps(error),
+                            cookies=None
+                        )
         else:
             logger.error("payload 中未包含 articles 数组")
     except Exception as e:
