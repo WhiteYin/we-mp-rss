@@ -20,6 +20,8 @@ class MessageTask(Base):
     message_template = Column(Text, nullable=False)
     # 定义发送接口
     web_hook_url = Column(String(500), nullable=False)
+    # 定义执行失败WebHook回调地址
+    err_web_hook_url = Column(String(500), nullable=False)
     # 定义请求头，JSON格式存储
     headers = Column(Text, nullable=True)
     # 定义Cookie，用于认证

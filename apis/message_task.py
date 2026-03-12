@@ -226,6 +226,7 @@ class MessageTaskCreate(BaseModel):
     status: Optional[int] = 0
     headers: Optional[str] = ""
     cookies: Optional[str] = ""
+    err_web_hook_url: Optional[str] = ""
 
 @router.post("", summary="创建消息任务", status_code=status.HTTP_201_CREATED)
 async def create_message_task(
@@ -251,6 +252,7 @@ async def create_message_task(
             id=str(uuid.uuid4()),
             message_template=task_data.message_template,
             web_hook_url=task_data.web_hook_url,
+            err_web_hook_url=task_data.err_web_hook_url,
             cron_exp=task_data.cron_exp,
             mps_id=task_data.mps_id,
             message_type=task_data.message_type,
@@ -299,6 +301,8 @@ async def update_message_task(
             db_task.message_template = task_data.message_template
         if task_data.web_hook_url is not None:
             db_task.web_hook_url = task_data.web_hook_url
+        if task_data.err_web_hook_url is not None:
+            db_task.err_web_hook_url = task_data.err_web_hook_url
         if task_data.mps_id is not None:
             db_task.mps_id = task_data.mps_id
         if task_data.status is not None:

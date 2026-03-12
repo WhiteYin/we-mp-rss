@@ -25,11 +25,12 @@ const formData = ref<MessageTaskCreate>({
   message_type: 0,
   message_template: '',
   web_hook_url: '',
+  err_web_hook_url: '',
   headers: '',
   cookies: '',
   mps_id: [],
   status: 1,
-  cron_exp: '*/5 * * * *'
+  cron_exp: '*/5 * * * *',
 })
 
 const fetchTaskDetail = async (id: string) => {
@@ -41,11 +42,12 @@ const fetchTaskDetail = async (id: string) => {
       message_type: res.message_type || 0,
       message_template: res.message_template || '',
       web_hook_url: res.web_hook_url || '',
+      err_web_hook_url: res.err_web_hook_url || '',
       headers: res.headers || '',
       cookies: res.cookies || '',
       mps_id: res.mps_id ? JSON.parse(res.mps_id) : [],
       status: res.status || 0,
-      cron_exp: res.cron_exp || '*/5 * * * *'
+      cron_exp: res.cron_exp || '*/5 * * * *',
     }
     // 初始化选择器数据
     nextTick(() => {
@@ -64,26 +66,25 @@ const fetchTaskDetail = async (id: string) => {
 const handleSubmit = async () => {
   try {
     // 表单验证
-  
-  loading.value = true
-  
-  // 表单验证
-  try {
-    await formRef.value.validate()
-  } catch (error) {
-    Message.error(error?.errors?.join('\n') || '表单验证失败，请检查输入内容')
-    loading.value = false
-    return
-  }
 
+    loading.value = true
+
+    // 表单验证
+    try {
+      await formRef.value.validate()
+    } catch (error) {
+      Message.error(error?.errors?.join('\n') || '表单验证失败，请检查输入内容')
+      loading.value = false
+      return
+    }
 
     loading.value = true
     // 将mps_id转换为字符串
     const submitData = {
       ...formData.value,
-      mps_id: JSON.stringify(formData.value.mps_id)
+      mps_id: JSON.stringify(formData.value.mps_id),
     }
-    
+
     if (isEditMode.value && taskId.value) {
       await updateMessageTask(taskId.value, submitData)
       Message.success('更新任务成功，点击应用按钮后任务才会生效')
@@ -103,11 +104,9 @@ const handleSubmit = async () => {
 const rules = {
   name: [
     { required: true, message: '请输入任务名称' },
-    { min: 2, max: 30, message: '公众号名称长度应在2-30个字符之间' }
+    { min: 2, max: 30, message: '公众号名称长度应在2-30个字符之间' },
   ],
-  description: [
-    { max: 200, message: '描述不能超过200个字符' }
-  ]
+  description: [{ max: 200, message: '描述不能超过200个字符' }],
 }
 onMounted(() => {
   if (route.params.id) {
@@ -124,16 +123,13 @@ onMounted(() => {
   <a-spin :loading="loading">
     <div class="message-task-form">
       <h2>{{ isEditMode ? '编辑消息任务' : '添加消息任务' }}</h2>
-      
-      <a-form :model="formData" @submit="handleSubmit" ref="formRef"   :rules="rules">
+
+      <a-form :model="formData" @submit="handleSubmit" ref="formRef" :rules="rules">
         <a-tabs v-model:active-key="activeTab" type="card">
           <!-- 基本配置 -->
           <a-tab-pane key="basic" title="基本配置">
             <a-form-item label="任务名称" field="name" required>
-              <a-input
-                v-model="formData.name"
-                placeholder="请输入任务名称"
-              />
+              <a-input v-model="formData.name" placeholder="请输入任务名称" />
             </a-form-item>
 
             <a-form-item label="类型" field="message_type">
@@ -143,51 +139,50 @@ onMounted(() => {
               </a-radio-group>
             </a-form-item>
 
-
             <a-form-item label="消息模板" field="message_template">
-              <a-code-editor
-                v-model="formData.message_template"
-                placeholder="请输入消息模板内容"
-                language="custom"
-              />
-              <a-button v-if="formData.message_type === 0"
+              <a-code-editor v-model="formData.message_template" placeholder="请输入消息模板内容" language="custom" />
+              <a-button
+                v-if="formData.message_type === 0"
                 type="outline"
                 style="margin-top: 8px"
-                @click="formData.message_template = '### {{feed.mp_name}} 订阅消息：\n{% if articles %}\n{% for article in articles %}\n- [**{{ article.title }}**]({{article.url}}) ({{ article.publish_time }})\n{% endfor %}\n{% else %}\n- 暂无文章\n{% endif %}'">
+                @click="
+                  formData.message_template =
+                    '### {{feed.mp_name}} 订阅消息：\n{% if articles %}\n{% for article in articles %}\n- [**{{ article.title }}**]({{article.url}}) ({{ article.publish_time }})\n{% endfor %}\n{% else %}\n- 暂无文章\n{% endif %}'
+                "
+              >
                 使用示例消息模板
               </a-button>
-              <a-button v-else
+              <a-button
+                v-else
                 type="outline"
                 style="margin-top: 8px"
-                @click="formData.message_template = `{
+                @click="
+                  formData.message_template = `{
     'articles': [
     {% for article in articles %}
     {{article}}
     {% if not loop.last %},{% endif %}
     {% endfor %}
     ]
-}`">
-
+}`
+                "
+              >
                 使用示例WebHook模板
               </a-button>
             </a-form-item>
 
             <a-form-item label="WebHook地址" field="web_hook_url">
-              <a-input
-                v-model="formData.web_hook_url"
-                placeholder="请输入WebHook地址"
-              />
+              <a-input v-model="formData.web_hook_url" placeholder="请输入WebHook地址" />
               <a-link href="https://open.dingtalk.com/document/orgapp/obtain-the-webhook-address-of-a-custom-robot" target="_blank">如何获取WebHook</a-link>
+            </a-form-item>
+
+            <a-form-item label="执行失败WebHook回调地址" field="err_web_hook_url">
+              <a-input v-model="formData.err_web_hook_url" placeholder="执行失败WebHook回调地址" />
             </a-form-item>
 
             <a-form-item label="cron表达式" field="cron_exp" required>
               <a-space>
-                <a-input
-                  v-model="formData.cron_exp"
-                  placeholder="请输入cron表达式"
-                  readonly
-                  style="width: 300px"
-                />
+                <a-input v-model="formData.cron_exp" placeholder="请输入cron表达式" readonly style="width: 300px" />
                 <a-button @click="showCronPicker = true">选择</a-button>
               </a-space>
             </a-form-item>
@@ -195,7 +190,7 @@ onMounted(() => {
             <a-form-item label="公众号" field="mps_id">
               <a-space>
                 <a-input
-                  :model-value="(formData.mps_id||[]).map((mp: any) => mp.id?.toString() || mp.toString()).join(',')"
+                  :model-value="(formData.mps_id || []).map((mp: any) => mp.id?.toString() || mp.toString()).join(',')"
                   placeholder="请选择公众号，留空则对所有公众号生效"
                   readonly
                   style="width: 300px"
@@ -214,67 +209,39 @@ onMounted(() => {
 
           <!-- 高级配置 -->
           <a-tab-pane key="advanced" title="高级配置">
-            <a-alert type="info" style="margin-bottom: 16px;">
-              用于配置需要认证的WebHook接口
-            </a-alert>
+            <a-alert type="info" style="margin-bottom: 16px"> 用于配置需要认证的WebHook接口 </a-alert>
 
             <a-form-item label="Headers (JSON)" field="headers">
-              <a-textarea
-                v-model="formData.headers"
-                placeholder='{"Authorization": "Bearer token", "Content-Type": "application/json"}'
-                :auto-size="{ minRows: 4, maxRows: 8 }"
-              />
+              <a-textarea v-model="formData.headers" placeholder='{"Authorization": "Bearer token", "Content-Type": "application/json"}' :auto-size="{ minRows: 4, maxRows: 8 }" />
               <template #extra>用于认证的自定义请求头，格式为JSON</template>
             </a-form-item>
 
             <a-form-item label="Cookies" field="cookies">
-              <a-textarea
-                v-model="formData.cookies"
-                placeholder="session_id=xxx; token=yyy"
-                :auto-size="{ minRows: 4, maxRows: 8 }"
-              />
+              <a-textarea v-model="formData.cookies" placeholder="session_id=xxx; token=yyy" :auto-size="{ minRows: 4, maxRows: 8 }" />
               <template #extra>用于认证的Cookie字符串</template>
             </a-form-item>
           </a-tab-pane>
         </a-tabs>
 
-        <a-form-item style="margin-top: 24px;">
+        <a-form-item style="margin-top: 24px">
           <a-space>
-            <a-button html-type="submit" type="primary" :loading="loading">
-              提交
-            </a-button>
+            <a-button html-type="submit" type="primary" :loading="loading"> 提交 </a-button>
             <a-button @click="router.go(-1)">取消</a-button>
           </a-space>
         </a-form-item>
       </a-form>
 
       <!-- cron表达式选择器模态框 -->
-      <a-modal
-        v-model:visible="showCronPicker"
-        title="选择cron表达式"
-        :footer="false"
-        width="800px"
-      >
-        <cronExpressionPicker 
-          ref="cronPickerRef"
-          v-model="formData.cron_exp"
-        />
+      <a-modal v-model:visible="showCronPicker" title="选择cron表达式" :footer="false" width="800px">
+        <cronExpressionPicker ref="cronPickerRef" v-model="formData.cron_exp" />
         <template #footer>
           <a-button type="primary" @click="showCronPicker = false">确定</a-button>
         </template>
       </a-modal>
 
       <!-- 公众号选择器模态框 -->
-      <a-modal
-        v-model:visible="showMpSelector"
-        title="选择公众号"
-        :footer="false"
-        width="800px"
-      >
-        <MpMultiSelect 
-          ref="mpSelectorRef"
-          v-model="formData.mps_id"
-        />
+      <a-modal v-model:visible="showMpSelector" title="选择公众号" :footer="false" width="800px">
+        <MpMultiSelect ref="mpSelectorRef" v-model="formData.mps_id" />
         <template #footer>
           <a-button type="primary" @click="showMpSelector = false">确定</a-button>
         </template>

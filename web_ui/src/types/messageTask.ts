@@ -4,6 +4,7 @@ export interface MessageTask {
   message_type: number
   message_template: string
   web_hook_url: string
+  err_web_hook_url: string
   headers?: string
   cookies?: string
   mps_id: any // JSON类型
@@ -18,6 +19,7 @@ export interface MessageTaskCreate {
   message_type: number
   message_template: string
   web_hook_url: string
+  err_web_hook_url: string
   headers?: string
   cookies?: string
   mps_id: any
@@ -30,6 +32,7 @@ export interface MessageTaskUpdate {
   message_type?: number
   message_template?: string
   web_hook_url?: string
+  err_web_hook_url?: string
   headers?: string
   cookies?: string
   mps_id?: any

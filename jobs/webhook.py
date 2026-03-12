@@ -236,7 +236,7 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                     response.raise_for_status()
                     print(f"发送成功: {response.text}")
                 except Exception as e:
-                    error_message = f"文章发送失败: {article}, 错误: {str(e)}"
+                    error_message = f"文章发送失败: {article.title}, 错误: {str(e)}"
                     errors.append(error_message)
 
             # 汇总错误信息
@@ -244,6 +244,20 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                 print("以下文章发送失败:")
                 for error in errors:
                     print(error)
+                # 如果有错误且err_web_hook_url不为空，发送错误信息到err_web_hook_url
+                if hook.task.err_web_hook_url:
+                    webhook_msg = {    
+                        "msg_type": "text",
+                        "content": {
+                            "text": "\n".join(errors)
+                        }
+                    }
+                    requests.post(
+                        hook.task.err_web_hook_url,
+                        headers={"Content-Type": "application/json"},
+                        data=json.dumps(webhook_msg),
+                        cookies=None
+                    )
         else:
             logger.error("payload 中未包含 articles 数组")
     except Exception as e:

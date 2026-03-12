@@ -4,6 +4,25 @@
 IMAGE_NAME="we-mp-rss"
 IMAGE_VERSION="local"
 
+# 前端构建步骤
+echo "开始构建前端项目..."
+cd web_ui
+if [ $? -ne 0 ]; then
+    echo "进入 web_ui 目录失败！"
+    exit 1
+fi
+
+# 运行build.sh脚本
+./build.sh
+if [ $? -ne 0 ]; then
+    echo "前端构建失败！"
+    exit 1
+fi
+
+# 返回项目根目录
+cd ..
+echo "已返回项目根目录"
+
 # 停止并移除现有的 Docker Compose 服务
 echo "停止并移除现有的 Docker Compose 服务..."
 docker-compose -f ./compose/docker-compose-local.yaml down
