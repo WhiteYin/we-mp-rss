@@ -237,6 +237,13 @@ def call_webhook(hook: MessageWebHook, is_test: bool = False) -> str:
                     )
                     response.raise_for_status()
                     print(f"发送成功: {response.text}")
+                    # 如果response中的code不为0，则认为发送失败
+                    try:
+                        response_data = response.json()
+                        if response_data.get("code") != 0:
+                            raise Exception(f"发送失败: {response_data.get('message')}")
+                    except json.JSONDecodeError:
+                        logger.warning("无法解析响应为JSON，原始响应: " + response.text)                        
                 except Exception as e:
                     error_message = {
                         **article_data,
