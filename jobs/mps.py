@@ -57,7 +57,7 @@ def do_job(mp=None,task:MessageTask=None,isTest=False):
         else:
             wx=WxGather().Model()
             try:
-                wx.get_Articles(mp.faker_id,CallBack=UpdateArticle,Mps_id=mp.id,Mps_title=mp.mp_name, MaxPage=1,Over_CallBack=Update_Over,interval=interval)
+                wx.get_Articles(mp.faker_id,CallBack=UpdateArticle,Mps_id=mp.id,Mps_title=mp.mp_name, MaxPage=3,Over_CallBack=Update_Over,interval=interval)
             except Exception as e:
                 print_error(e)
                 # raise
