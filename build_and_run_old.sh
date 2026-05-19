@@ -30,7 +30,7 @@ fi
 
 # 停止并移除现有的 Docker Compose 服务
 echo "停止并移除现有的 Docker Compose 服务..."
-docker compose -f ./compose/docker-compose-local.yaml down
+docker-compose -f ./compose/docker-compose-local.yaml down
 if [ $? -ne 0 ]; then
     echo "Docker Compose 停止失败，可能未运行。继续执行..."
 fi
@@ -53,7 +53,7 @@ echo "Docker 镜像构建成功：$IMAGE_NAME:$IMAGE_VERSION"
 
 # 启动 Docker Compose 服务
 echo "启动 Docker Compose 服务..."
-docker compose -f ./compose/docker-compose-local.yaml up -d
+docker-compose -f ./compose/docker-compose-local.yaml up -d
 if [ $? -ne 0 ]; then
     echo "Docker Compose 启动失败！"
     exit 1
